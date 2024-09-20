@@ -9,6 +9,8 @@ import numpy as np
 import sys
 from subprocess import call
 
+# INSTALL TEXMAKER ON GOOGLE BEFORE LAUNCHING THIS SCRIPT
+
 r = []
 datasets = []
 for filename in glob.glob("./results/res*.pklz"):
@@ -31,20 +33,28 @@ def getMean(r):
             for i in range(len(r)):
                 apTrain.append(r[i][da][a][0])
                 apTest.append(r[i][da][a][1])
-            mr[da][a] = (np.mean(apTrain), np.std(apTrain),
-                         np.mean(apTest), np.std(apTest))
-    mr["Mean"] = {a: (np.mean([mr[da][a][0] for da in datasets]),
-                      np.mean([mr[da][a][1] for da in datasets]),
-                      np.mean([mr[da][a][2] for da in datasets]),
-                      np.mean([mr[da][a][3] for da in datasets]))
-                  for a in algos}
+            mr[da][a] = (
+                np.mean(apTrain),
+                np.std(apTrain),
+                np.mean(apTest),
+                np.std(apTest),
+            )
+    mr["Mean"] = {
+        a: (
+            np.mean([mr[da][a][0] for da in datasets]),
+            np.mean([mr[da][a][1] for da in datasets]),
+            np.mean([mr[da][a][2] for da in datasets]),
+            np.mean([mr[da][a][3] for da in datasets]),
+        )
+        for a in algos
+    }
     return mr
 
 
 def latex(r):
     if not os.path.exists("latex"):
         os.makedirs("latex")
-    f = open('latex/doc.tex', 'w')
+    f = open("latex/doc.tex", "w")
     sys.stdout = f
     print(r"\documentclass[a4paper, 12pt]{article}")
     print(r"\usepackage[french]{babel}")
@@ -60,8 +70,7 @@ def latex(r):
     mr = getMean(r)
     for name, idSet in [("test", 2), ("train", 0)]:
         print(r"\begin{table*}")
-        print((r"\caption{Mean " + name + " F1 over " + str(len(r)) +
-               " iterations}"))
+        print((r"\caption{Mean " + name + " F1 over " + str(len(r)) + " iterations}"))
         print(r"\resizebox{1.0\textwidth}{!}{\begin{tabular}{l", end="")
         for a in algos:
             print(" c", end="")
@@ -78,27 +87,30 @@ def latex(r):
             if da == "Mean":
                 print(r"\midrule")
             print("{:12}".format(da.replace("%", "\\%")), end="")
-            order = list(reversed(
-                    np.argsort([mr[da][a][idSet] for a in algos])))
+            order = list(reversed(np.argsort([mr[da][a][idSet] for a in algos])))
             best = algos[order[0]]
             if da != "Mean":
                 for i, idx in enumerate(order):
-                    ranks[algos[idx]] += 1+i
+                    ranks[algos[idx]] += 1 + i
             for a in algos:
                 b1 = ""
                 b2 = ""
                 if a == best:
                     b1 = r"\textbf{"
                     b2 = "}"
-                print("&  " + b1 +
-                      "{:4.1f}".format(mr[da][a][idSet]) +
-                      b2 + " $\\pm$ {:4.1f}".format(mr[da][a][idSet+1]),
-                      end="")
+                print(
+                    "&  "
+                    + b1
+                    + "{:4.1f}".format(mr[da][a][idSet])
+                    + b2
+                    + " $\\pm$ {:4.1f}".format(mr[da][a][idSet + 1]),
+                    end="",
+                )
             print(r"\\")
             if da == "Mean":
                 print("Average Rank", end="")
                 for a in algos:
-                    print("& {:1.2f}".format(ranks[a]/(len(datasets))), end="")
+                    print("& {:1.2f}".format(ranks[a] / (len(datasets))), end="")
                 print(r"\\")
         print(r"\bottomrule")
         print(r"\end{tabular}}")
